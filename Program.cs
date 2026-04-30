@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<TodoDb>(opt => opt.UseSqlite("Data Source=todos.db"));
-
+builder.Services.AddCors();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
     app.MapOpenApi();
 }
 
