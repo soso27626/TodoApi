@@ -6,6 +6,7 @@ class Todo
     public string Title { get; set; } = "";
     public bool IsComplete { get; set; }
     public DateTime? Deadline { get; set; }
+    public string? Recurrence { get; set; }
 }
 
 

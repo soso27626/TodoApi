@@ -8,12 +8,40 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-
     app.MapOpenApi();
 }
 
-app.MapGet("/todos", async (TodoDb db) => await db.Todos.ToListAsync());
+app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
+app.MapGet("/todos", async (TodoDb db) =>
+{
+    var todos = await db.Todos.ToListAsync();
+    var today = DateTime.Now.Date;
+    
+    foreach (var todo in todos)
+    {
+        if (todo.Recurrence != null && todo.Deadline.HasValue && todo.Deadline.Value.Date < today)
+        {
+            // 不管完没完成，只要过期了就推到下一个周期
+            while (todo.Deadline.Value.Date < today)
+            {
+                todo.Deadline = todo.Recurrence switch
+                {
+                    "daily" => todo.Deadline.Value.AddDays(1),
+                    "weekly" => todo.Deadline.Value.AddDays(7),
+                    "biweekly" => todo.Deadline.Value.AddDays(14),
+                    "yearly" => todo.Deadline.Value.AddYears(1),
+                    _ => todo.Deadline
+                };
+            }
+            todo.IsComplete = false;
+        }
+    }
+    
+    await db.SaveChangesAsync();
+    return todos;
+});
+
 
 app.MapGet("/todos/{id}", async (int id, TodoDb db) =>
 {
@@ -48,5 +76,3 @@ app.MapDelete("/todos/{id}", async (int id, TodoDb db) =>
 });
 
 app.Run();
-
-
