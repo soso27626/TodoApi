@@ -75,4 +75,31 @@ app.MapDelete("/todos/{id}", async (int id, TodoDb db) =>
     return Results.NoContent();
 });
 
+app.MapGet("/journal", async (TodoDb db) => await db.JournalEntries.ToListAsync());
+
+app.MapPost("/journal", async (JournalEntry entry, TodoDb db) =>
+{
+    entry.Date = DateTime.Now.Date;
+    db.JournalEntries.Add(entry);
+    await db.SaveChangesAsync();
+    return Results.Created($"/journal/{entry.Id}", entry);
+});
+
+app.MapGet("/journal/{date}", async (string date, TodoDb db) =>
+{
+    var d = DateTime.Parse(date).Date;
+    var entry = await db.JournalEntries.FirstOrDefaultAsync(e => e.Date == d);
+    return entry is null ? Results.NotFound() : Results.Ok(entry);
+});
+
+app.MapPut("/journal/{id}", async (int id, JournalEntry input, TodoDb db) =>
+{
+    var entry = await db.JournalEntries.FindAsync(id);
+    if (entry is null) return Results.NotFound();
+    entry.Content = input.Content;
+    await db.SaveChangesAsync();
+    return Results.Ok(entry);
+});
+
+
 app.Run();

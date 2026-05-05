@@ -14,4 +14,13 @@ class TodoDb : DbContext
 {
     public TodoDb(DbContextOptions<TodoDb> options) : base(options) { }
     public DbSet<Todo> Todos => Set<Todo>();
+    public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
+
+}
+
+class JournalEntry
+{
+    public int Id { get; set; }
+    public DateTime Date { get; set; }
+    public string Content { get; set; } = "";
 }
